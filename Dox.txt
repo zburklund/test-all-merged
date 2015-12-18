@@ -1,0 +1,127 @@
+﻿Here is the documentation for CAS. I'll go ahead and mark the ticket as resolved, but should you have any further questions you can respond to this resolution email within 3 days. After that the ticket will close and a new ticket will have to be created.
+
+
+CAS Single SignOn General Information for Case Western Reserve University
+Updated Oct, 2014
+Using CAS
+Users can log into CAS at https://login.case.edu/cas/login. Users can log out of CAS at https://login.case.edu/cas/logout. If a user logs into CAS, he or she can be logged in to any application that participates in the service without again specifying his or her password for a period of up to 8 hours.
+Frequently Asked Questions
+Why do I need to change my password before I can log in?
+CAS integrates with the university's password policy requirements. If your password is expired and you attempt to log in, CAS will inform you of such. You will be given a link to change your password.
+Why should I close my browser when I am done?
+When you log in to CAS, a cookie is stored in your browser that allows you to be automatically logged in to other sites. This cookie is set to expire at the end of your browser's session. So, when you close your browser, this cookie no longer exists and you can no longer be automatically be logged in to any more sites without specifying your password again.
+It is possible to log out of CAS by visiting https://login.case.edu/cas/logout, however, this is not a secure form of logging out! Some sites may still have you recorded as logged in through the use of cookies on those specific sites. Closing your browser is the easiest way to guarantee that the next user of a computer will not be surfing the web under your identity.
+Authentication versus authorization
+When you access content, there are two phases you must go through to be allowed to access it: authentication and authorization. Authentication is proving that you are who you say you are. Authorization is determining whether a proven person is authorized to access something. CAS handles authentication. By logging in to CAS, CAS can authenticate your identity to participating services because you have authenticated yourself to CAS and CAS is trusted by the services that use it. CAS does not handle authorization to individual services. It is up to the individual services to determine if a user is allowed to access them.
+How do I obtain the user's name, status, etc
+CAS merely authenticates a user. All the services know is that a username, abc123 is accessing their site. CAS does not provide information about users to accessed services. However, all is not lost. This information is contained within the university's LDAP server. It is possible for end-services to query the LDAP server for information about these users to control and customize service behavior. Some examples are displaying the user's name, filtering content based upon user's role within the university (student, staff, faculty, etc), grade level of student (freshmen, sophomore, junior, senior, etc). To find information on how to do this, consult the LDAP article.
+Why should I change my existing service to use CAS
+In addition to the normal benefits of only having to supply credentials a minimal number of times, using CAS with your web service helps fight phishing attempts. By providing a uniform login experience, users will be wary of providing their credentials on web sites inconsistent with the login.case.edu work flow. Using CAS, also, ensures that credentials are always passed over the network in a secure format.
+I have more questions, who do I contact
+Send an e-mail to sso-admin@case.edu
+How CAS Works
+Basic overview
+When a user accesses a site that uses CAS, that site redirects the user to CAS (login.case.edu). Once CAS has verified a user's identity, it forwards them back to the original site. CAS attaches a unique ticket number to the URL of the protected service. The protected service sees this ticket. It sends this ticket to CAS. CAS tells the protected service whether the ticket is good and if so, the Case ID that was used to obtain the ticket. The protected service reacts accordingly, allowing access if the ticket is good.
+Detailed overview
+When you log into CAS at https://login.case.edu/cas/login, a cookie is saved in your browser. This cookie contains a unique ticket number that identifies you to the CAS server. Every time you access https://login.case.edu after you are logged in, your browser automatically transmits this cookie to the web server. CAS reads the cookie, looks up the ticket in its database, and identifies you.
+CAS clients behave a little differently. Say you access http://blog.case.edu/mt/mt-cas.cgi. When you load up that page, the page requires that you be logged into CAS to access it. How does this work? The page redirects you to
+
+https://login.case.edu/cas/login?service=http://blog.case.edu/mt/mt-cas.cgi  
+
+
+via an HTTP Location header. Once CAS has verified you are logged in, it sends you back to the URL specified in the service parameter, in this case http://blog.case.edu/mt/mt-cas.cgi. There is, however, one small change. CAS appends a service ticket to the URL, like
+
+http://blog.case.edu/mt/mt-cas.cgi?ticket=ST-3555-McPZ4NKfx6S0EhnCEkHc  
+
+
+The CAS client sees that the ticket parameter is defined and knows the user has just come from https://login.case.edu. The CAS client then queries
+
+https://login.case.edu/cas/serviceValidate?ticket=ST-3555-McPZ4NKfx6S0EhnCEkHc&service=http://blog.case.edu/mt/mt-cas.cgi  
+
+The CAS server replies with an XML document that describes the service ticket. Some of the values returned include whether the ticket is good and the username associated with the ticket.
+
+<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>    <cas:authenticationSuccess>      <cas:user>abc12</cas:user>    </cas:authenticationSuccess>  </cas:serviceResponse>
+
+
+Alternatively, the CAS client can query
+
+https://login.case.edu/cas/validate?ticket=ST-3555-McPZ4NKfx6S0EhnCEkHc&service=http://blog.case.edu/mt/mt-cas.cgi  
+
+This will return a two line document. The first line will say yes or no. The next line (only present if the first line is yes) will be the username associated with the ticket.
+In short, when a user requests access to an application that is CASified, that user gets whisked away to the CAS server. Once they are logged in, the client is returned to the application with a unique service ticket. This is a personalized ticket, good for only one use, and a short period of time that will gain you access into the application. The CAS client verifies this ticket by talking to the CAS server and if everything checks out, it lets you in.
+Proxy authentication
+CAS also supports proxy authentication. Proxy authentication is useful for middle-tier applications that need to connect to another application on behalf of the user. For example, you visit a portal that requires you to be logged in to CAS. This portal shows information from Blackboard, which uses CAS. Proxy authentication can be used so the portal can obtain information from Blackboard without the user explicity logging in to Blackboard.
+Proxy authentication can be very confusing and can also lead to security concerns if not implemented properly. A good source on proxy authentication is the official documentation on proxy authentication, the CAS 2 Architecture, and the CAS protocol. Before using proxy authentication, please e-mail sso-admin@case.edu and let them know what you are doing. This is for your own benefit and the data security of your customers.
+ CAS Implementation Best Practices
+Use Caching
+Many of the clients listed below use some form of caching. Without caching, the CAS client will redirect the user to the CAS server for every request to obtain a new service ticket. This places more load on not only the CAS server, but your web server as well. Also, it takes a little longer for every page access to load because the user has to process 3 HTTP requests and your web server has to verify the ticket with the CAS server. Assuming a negligible page load time under normal conditions, it takes about 5x longer to view a page.
+To eliminate this bottleneck, you should store a cookie on the client's browser that tells your server that they are logged in. This cookie should contain a ticket that you can map to a user. Most CAS clients do this transparently. Some clients, such as the PHP client, store this information in the user's $_SESSION.
+Don't Log the User out of CAS
+Some CAS clients have a logoff function that will actually log the user out of CAS. This should be avoided! Don't confuse local application logoff and CAS logoff. If the user logs out of the local application, they are simply transitioning from registered user mode to anonymous user mode. If a user logs out of CAS, they will be forced to supply their username and password again. A simple way to check for logging out of CAS is to look for a request to https://login.case.edu/cas/logout. If this URL is accessed by a client, they will be logged out of CAS.
+Configuring Applications to Use CAS
+CAS is being used because it supports many clients for authentication. A fairly complete list of clients is available. To use CAS for authentication, you need to know the following parameters:
+
+    Host: https://login.case.edu
+    Context: /cas/
+    Login URL: https://login.case.edu/cas/login
+    Logout URL: https://login.case.edu/cas/logout
+    Validate URL: https://login.case.edu/cas/validate (CAS protocol version 1)
+    Service Validate URL: https://login.case.edu/cas/serviceValidate (CAS protocol version 2)
+    Service Validate URL: https://login.case.edu/cas/p3/serviceValidate (CAS protocol version 3)
+    Running Version: 4.0.1
+    CAS Protocol Versions Supported: 1, 2 and 3
+    XML Template Returned (Protocol 2):
+
+<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>    <cas:authenticationSuccess>      <cas:user>abc12</cas:user>    </cas:authenticationSuccess>  </cas:serviceResponse>
+
+    XML Template Returned (Protocol 3):
+
+<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
+    <cas:authenticationSuccess>
+        <cas:user>abc12</cas:user>
+        <cas:attributes>
+            <cas:user>abc12</cas:user>
+        </cas:attributes>
+     </cas:authenticationSuccess>
+</cas:serviceResponse>
+
+Note that the above templates have been compressed to save space and formatted to make them easy to read.  The XML returned by the CAS server is not guaranteed to have the exact (or any) indentation, and may contain additional blank lines.  The only guarantee is that the the components as shown above will exist, and that the XML returned will be valid XML.  It is strongly suggested, therefore to use either one of the CAS clients mentioned below.  If you are attempting to create your own CAS client, the use of an XML parser is REQUIRED to handle the returned XML.  Do NOT attempt to parse the XML according to the formatting of the templates provided above.
+If one the following clients does not work or does not apply to you, you may wish to create your own CAS client. This is relatively simple because CAS operates over HTTP and the protocol is straightforward. Consulting the CAS protocol is necessary to properly design a client.
+Apache
+Apache must be compiled with APache eXtenSion tool (APXS) to compile and install the mod_auth_cas object as a dynamically shared object (DSO). The instructions for setting the module up can be found here.
+The following example configuration settings should work:
+
+   
+LoadModule auth_cas_module /usr/lib/apache2/modules/mod_auth_cas.so  CASLoginURL https://login.case.edu/cas/login  CASValidateURL https://login.case.edu/cas/serviceValidate  CASCertificatePath /path/to/ca-certificate.crt  #CASDebug On  CASCookiePath /path/to/cas/cookie/  <Directory "/cas-protected/">          AuthType CAS          AuthName "CAS"          require valid-user  </Directory>  
+
+
+PHP
+You can use phpCAS, a CAS PHP library to perform CAS authentication within your PHP applications.
+Perl
+See http://search.cpan.org/~osalaun/AuthCAS/lib/AuthCAS.pm
+Java
+See https://wiki.jasig.org/display/CASC/CAS+Client+for+Java+3.1
+Ruby / Ruby on Rails
+See http://rubyforge.org/projects/rubycas-client/
+
+Current Assignees: Network ID and Password
+
+CC(s): (permanent) fpbhelpdesk@case.edu
+
+Ticket Information:
+
+Source: 	Email 	 
+
+Contact Information:
+
+User ID: 	bdm4 	  	Last Name: 	Margevicius
+First Name: 	Benjamin 	  	Email Address: 	benjamin.margevicius@case.edu
+Phone: 	216-368-6997 	  	Alt Phone #: 	216-368-6322
+VIP: 	Off 	  	College: 	School of Nursing
+Role: 	STAFF 	  	Office Address: 	School Of Nursing 219h
+Alternate Email: 	bdm4@case.edu 	  	Alternate Email 2: 	greendragon@case.edu
+Alternate Email 3: 	maelstrom@case.edu 	  	Alternate Email 4: 	margevicius@case.edu
+Alternate Email 6: 	ben.margevicius@case.edu 	 
+
+If you receive one of our email based Customer Satisfaction Surveys, please take a few minutes to complete it. Your feedback helps us find ways to improve our services and is a great way to recognize someone that provided you with excellent service! Thanks!
+
