@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="ActiveDirectory.cs" />
     <Compile Include="CASP1.cs" />
+    <Compile Include="CASP3.cs" />
     <Compile Include="Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
