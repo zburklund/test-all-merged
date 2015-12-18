@@ -9,7 +9,6 @@ namespace CASP
     public class ActiveDirectory
     {
         const string caseDomain = "ads.case.edu";
-
         /// <summary>
         /// Returns the list of ADS groups a person is in
         /// </summary>

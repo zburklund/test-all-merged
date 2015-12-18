@@ -24,8 +24,7 @@ namespace CASP
        
 
         protected void Page_Load(object sender, EventArgs e)
-        {            
-
+        {   
             bool isAuth = ActiveDirectory.isUserAuthorized("bdm4", "nurs-dept-it");
         }
     }   
