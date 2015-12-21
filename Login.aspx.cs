@@ -15,6 +15,9 @@ namespace CASP
     public partial class Default : System.Web.UI.Page
     {
         /* 12-2015 Dox.. See Dox.txt in this repo to see the documentation.
+         * 
+         * By Ben Margevicius bdm4@case.edu 12/21/2015
+         * 
         Host: https://login.case.edu
         Context: /cas/
         Login URL: https://login.case.edu/cas/login
