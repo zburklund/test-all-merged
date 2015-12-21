@@ -50,5 +50,17 @@ namespace CASP
             }
             return isAuth;
         }
+
+
+        public static bool isUserAuthorized(string userName, List<string> groupNames, bool recursiveSearch = true)
+        {
+            bool isAuth = false;
+            foreach (var g in groupNames)
+            {
+                isAuth = isUserAuthorized(userName, g, recursiveSearch);
+                if (isAuth) break;
+            }
+            return isAuth;
+        }
     }
 }
